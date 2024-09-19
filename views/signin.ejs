@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Sign In</h1>
+      <form>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="text" id="email" name="email" />
+          <div id="email-error" style="color: red; padding-top: 5px"></div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" />
+          <div id="password-error" style="color: red; padding-top: 5px"></div>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn">Sign In</button>
+          <div id="user-error" style="color: red; padding-top: 5px"></div>
+        </div>
+      </form>
+      <p>Don't have an account? <a href="/user/signup">Sign up here</a></p>
+    </div>
+    <div class="success-message" id="success-message"></div>
+
+    <script>
+      let form = document.querySelector("form");
+      let email = form.querySelector("#email");
+      let password = form.querySelector("#password");
+      const emailError = document.querySelector("#email-error");
+      const passwordError = document.querySelector("#password-error");
+      const userError = document.querySelector("#user-error");
+      const successMessage = document.getElementById("success-message");
+
+      function clearError(field, errorField) {
+        field.addEventListener("keyup", () => {
+          if (field.value.trim() !== "") {
+            errorField.textContent = "";
+          } else {
+            errorField.textContent = field.name + " is required";
+          }
+        });
+      }
+
+      clearError(email, emailError);
+      clearError(password, passwordError);
+
+      async function signin() {
+        emailError.textContent = "";
+        passwordError.textContent = "";
+        userError.textContent = "";
+        try {
+          let res = await fetch("/user/signin", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email.value,
+              password: password.value,
+            }),
+          });
+          let data = await res.json();
+          if (data.errors || data.msg) {
+            emailError.textContent = data?.errors?.email || "";
+            passwordError.textContent = data?.errors?.password || "";
+            userError.textContent = data?.msg || "";
+            return;
+          }
+          successMessage.style.display = "block";
+          successMessage.textContent = "Logged in successfully!";
+          setTimeout(() => {
+            successMessage.style.display = "none";
+            email.value = "";
+            password.value = "";
+            window.location.href = "/";
+          }, 3000);
+        } catch (error) {
+          console.log("🚀 ~ signin ~ error:", error);
+        }
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        signin();
+      });
+    </script>
+  </body>
+</html>

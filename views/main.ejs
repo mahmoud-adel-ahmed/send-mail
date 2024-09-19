@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="ribbons"></div>
+    <div style="position: absolute; top: 20px; right: 20px">
+      <button id="logout-btn" class="btn">Logout</button>
+    </div>
+    <div class="container">
+      <h1>Send Email</h1>
+      <form>
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" />
+        </div>
+        <div class="form-group">
+          <label for="to">Send To</label>
+          <input type="email" id="to" name="to" />
+        </div>
+        <div class="form-group">
+          <label for="htmlbody">HTML Body</label>
+          <textarea id="htmlbody" name="htmlbody" rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn">Send Email</button>
+          <div id="email-error" style="color: red; padding-top: 10px"></div>
+        </div>
+        <div id="form-message" style="color: green"></div>
+      </form>
+    </div>
+
+    <script>
+      const ribbonsContainer = document.querySelector(".ribbons");
+      const successMessage = document.getElementById("success-message");
+
+      function createRibbon() {
+        const ribbon = document.createElement("div");
+        ribbon.className = "ribbon";
+        ribbon.style.left = Math.random() * 100 + "vw"; // Random horizontal position
+        ribbon.style.animationDuration = Math.random() * 2 + 3 + "s"; // Random duration
+        ribbon.style.opacity = Math.random(); // Random opacity
+        ribbonsContainer.appendChild(ribbon);
+
+        // Remove ribbon after animation is complete
+        ribbon.addEventListener("animationend", () => {
+          ribbon.remove();
+        });
+      }
+
+      function createRibbons(count) {
+        for (let i = 0; i < count; i++) {
+          createRibbon();
+        }
+      }
+
+      let form = document.querySelector("form");
+      let logout = document.querySelector("#logout-btn");
+      let subject = form.querySelector("#subject");
+      let to = form.querySelector("#to");
+      let htmlbody = form.querySelector("#htmlbody");
+      const emailError = document.querySelector("#email-error");
+
+      async function sendMail() {
+        emailError.textContent = "";
+        try {
+          let res = await fetch("/sendmail", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: to.value,
+              subject: subject.value,
+              htmlBody: htmlbody.value,
+            }),
+          });
+          let data = await res.json();
+          if (data.errMsg) {
+            emailError.textContent = data.errMsg || "";
+            return;
+          }
+          console.log(data);
+          createRibbons(150);
+          subject.value = "";
+          to.value = "";
+          htmlbody.value = "";
+        } catch (error) {
+          console.log("🚀 ~ sendMail ~ error:", error);
+        }
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        sendMail();
+      });
+
+      logout.addEventListener("click", async () => {
+        try {
+          let res = await fetch("/user/logout");
+          let data = await res.json();
+          console.log(data);
+          window.location.href = "/user/signin";
+        } catch (error) {
+          console.log(error);
+        }
+      });
+    </script>
+  </body>
+</html>

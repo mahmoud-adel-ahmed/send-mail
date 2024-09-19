@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Sign Up</h1>
+      <form>
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" />
+          <div
+            id="name-error"
+            style="display: none; color: red; padding-top: 5px"
+          ></div>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="text" id="email" name="email" />
+          <div
+            id="email-error"
+            style="display: none; color: red; padding-top: 5px"
+          ></div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" />
+          <div
+            id="password-error"
+            style="display: none; color: red; padding-top: 5px"
+          ></div>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn">Sign Up</button>
+        </div>
+      </form>
+      <p>Already have an account? <a href="/user/signin">Login here</a></p>
+    </div>
+
+    <div class="success-message" id="success-message"></div>
+
+    <script>
+      let form = document.querySelector("form");
+      let username = form.querySelector("#name");
+      let email = form.querySelector("#email");
+      let password = form.querySelector("#password");
+      const nameError = document.querySelector("#name-error");
+      const emailError = document.querySelector("#email-error");
+      const passwordError = document.querySelector("#password-error");
+      const successMessage = document.getElementById("success-message");
+
+      function clearError(field, errorField) {
+        field.addEventListener("keyup", () => {
+          if (field.value.trim() !== "") {
+            errorField.textContent = "";
+            errorField.style.display = "none";
+          } else {
+            errorField.style.display = "block";
+            errorField.textContent = field.name + " is required";
+          }
+        });
+      }
+
+      clearError(username, nameError);
+      clearError(email, emailError);
+      clearError(password, passwordError);
+
+      async function signup() {
+        nameError.textContent = "";
+        emailError.textContent = "";
+        passwordError.textContent = "";
+        try {
+          let res = await fetch("/user/signup", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: username.value,
+              email: email.value,
+              password: password.value,
+            }),
+          });
+          let data = await res.json();
+
+          if (data.errors) {
+            nameError.style.display = "block";
+            nameError.textContent = data.errors.name || "";
+            emailError.style.display = "block";
+            emailError.textContent = data.errors.email || "";
+            passwordError.style.display = "block";
+            passwordError.textContent = data.errors.password || "";
+            return;
+          }
+
+          successMessage.style.display = "block";
+          successMessage.textContent = "Account created successfully!";
+          setTimeout(() => {
+            successMessage.style.display = "none";
+            //reset
+            username.value = "";
+            password.value = "";
+            email.value = "";
+            window.location.href = "/user/signin";
+          }, 3000);
+        } catch (error) {
+          console.log("🚀 ~ signup ~ error:", error);
+        }
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        signup();
+      });
+    </script>
+  </body>
+</html>
